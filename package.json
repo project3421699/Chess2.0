@@ -1,0 +1,9 @@
+{
+  "name": "chess-2-0",
+  "version": "1.0.0",
+  "description": "Premium single-file web chess app with online multiplayer via Firebase Realtime Database",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

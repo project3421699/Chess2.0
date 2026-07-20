@@ -200,6 +200,20 @@
       border: 1px solid var(--border-color);
       box-shadow: var(--panel-shadow);
       transition: all 0.3s ease;
+      /* Prevent any scroll inside the chess board container */
+      overflow: hidden;
+      overscroll-behavior: contain;
+    }
+
+    /* Disable page-level scroll/zoom gestures on the board itself.
+       chessboard.js already handles dragging, we just stop browser default
+       gestures like pull-to-refresh, pinch zoom and double-tap zoom. */
+    #board {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -ms-touch-action: none;
     }
 
     /* Overriding Chessboard.js square colors */
@@ -763,6 +777,153 @@
       font-weight: 500;
     }
 
+    /* ONLINE MULTIPLAYER UI */
+    .online-status-card {
+      background-color: rgba(0, 0, 0, 0.18);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .online-status-card.error {
+      border-color: #ef4444;
+      background-color: rgba(239, 68, 68, 0.08);
+    }
+
+    .online-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .online-status-label {
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.7rem;
+    }
+
+    .online-roomid {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: var(--btn-bg);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent-color);
+      border: 1px solid var(--border-color);
+    }
+
+    .share-link-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .share-link-row input {
+      flex: 1;
+      padding: 10px 12px;
+      background-color: var(--btn-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.78rem;
+      outline: none;
+      transition: all 0.2s ease;
+      min-width: 0;
+      cursor: text;
+    }
+
+    .share-link-row input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .join-room-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .join-room-row input {
+      flex: 1;
+      padding: 10px 12px;
+      background-color: var(--btn-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-color);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      outline: none;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+      min-width: 0;
+    }
+
+    .join-room-row input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .join-room-row input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .divider-or {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 4px 0;
+    }
+
+    .divider-or::before,
+    .divider-or::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: var(--border-color);
+    }
+
+    .toast-notif {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-color);
+      color: var(--bg-color);
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      z-index: 9999;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      animation: toastIn 0.3s ease-out;
+    }
+
+    .toast-notif.error {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    @keyframes toastIn {
+      from { transform: translate(-50%, 20px); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+
     /* SCROLLBAR CUSTOMIZATION */
     ::-webkit-scrollbar {
       width: 6px;
@@ -842,6 +1003,60 @@
             
             <input type="radio" id="mode-local" name="game-mode" value="local">
             <label for="mode-local"><i class="fa-solid fa-users"></i> Local 2-Player</label>
+
+            <input type="radio" id="mode-online" name="game-mode" value="online">
+            <label for="mode-online"><i class="fa-solid fa-globe"></i> Online</label>
+          </div>
+        </div>
+
+        <!-- ONLINE MULTIPLAYER CONTROLS (Visible only in ONLINE mode) -->
+        <div class="online-only-controls" style="display: none;">
+          <!-- Pre-join: Create / Join forms -->
+          <div class="control-group" id="online-prejoin">
+            <span class="section-label">Online Multiplayer</span>
+            <button class="btn btn-primary" id="create-room-btn" onclick="createRoom()">
+              <i class="fa-solid fa-plus-circle"></i> Create New Room
+            </button>
+
+            <div class="divider-or">or join with Room ID</div>
+
+            <div class="join-room-row">
+              <input id="join-room-input" type="text" placeholder="Room ID" maxlength="8" autocomplete="off">
+              <button class="btn" onclick="joinRoomManual()" style="flex: 0 0 auto;">
+                <i class="fa-solid fa-sign-in-alt"></i> Join
+              </button>
+            </div>
+          </div>
+
+          <!-- In-room: Status + Share link + Leave -->
+          <div class="control-group" id="online-inroom" style="display: none;">
+            <span class="section-label">Multiplayer Status</span>
+
+            <div id="online-status-card" class="online-status-card">
+              <div class="online-status-row">
+                <span class="online-status-label">Room</span>
+                <span id="online-roomid" class="online-roomid"></span>
+              </div>
+              <div class="online-status-row">
+                <span class="online-status-label">You</span>
+                <span id="online-mycolor"></span>
+              </div>
+              <div class="online-status-row">
+                <span class="online-status-label">Opponent</span>
+                <span id="online-opponent-status">Waiting...</span>
+              </div>
+            </div>
+
+            <div class="share-link-row">
+              <input id="share-link-input" type="text" readonly value="">
+              <button class="btn btn-primary" onclick="copyRoomLink()" style="flex: 0 0 auto;">
+                <i class="fa-solid fa-copy"></i> Copy
+              </button>
+            </div>
+
+            <button class="btn" onclick="leaveRoom()" style="margin-top: 4px;">
+              <i class="fa-solid fa-door-open"></i> Leave Room
+            </button>
           </div>
         </div>
 
@@ -906,7 +1121,7 @@
       <div class="dashboard-card">
         <div class="control-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-            <span class="section-label">Engine Status</span>
+            <span class="section-label" id="status-section-label">Engine Status</span>
             <div id="engine-badge" class="engine-badge online">Stockfish</div>
           </div>
         </div>
@@ -975,6 +1190,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <!-- Chessboard.js for rendering and interaction -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <!-- Firebase App + Realtime Database (compat SDKs for global firebase.* usage) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
   <!-- GAME APP JAVASCRIPT -->
   <script>
@@ -983,8 +1201,8 @@
     // ==========================================
     let board = null;
     let chess = new Chess();
-    
-    let gameMode = 'ai'; // 'ai' or 'local'
+
+    let gameMode = 'ai'; // 'ai', 'local' or 'online'
     let difficultyLevel = 1; // 1 to 4
     let playerColor = 'w'; // 'w' or 'b'
     let engineThinking = false;
@@ -1001,6 +1219,23 @@
 
     // Web Audio Synthesizer Context
     let audioCtx = null;
+
+    // ==========================================
+    // FIREBASE / MULTIPLAYER STATE
+    // ==========================================
+    let firebaseApp = null;
+    let firebaseDB = null;
+    let firebaseReady = false;
+    const multiplayer = {
+      active: false,        // Are we currently inside a room?
+      roomId: null,         // e.g. 'ABC123'
+      ref: null,            // firebase.database().ref('rooms/ABC123')
+      myColor: null,        // 'w' or 'b' (assigned when joining)
+      myPlayerId: null,     // UUID persisted in localStorage
+      // connection: 'disconnected' | 'connecting' | 'waiting' | 'connected' | 'finished' | 'error'
+      connection: 'disconnected',
+      initialSyncedMoves: 0  // How many remote moves we already applied locally on initial sync
+    };
 
     // Initialize the app on DOM Load
     $(document).ready(function() {
@@ -1027,12 +1262,29 @@
         onMouseoutSquare: onMouseoutSquare,
         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
       };
-      
+
       board = Chessboard('board', config);
       $(window).resize(board.resize);
 
       // 5. Initial UI Refresh
       updateGameStatus();
+      updateStatusSectionLabel();
+
+      // 6. If a ?roomid=xxx was provided in URL, auto-switch to online and join.
+      //    Firebase is initialized lazily by joinRoom() if not ready yet.
+      const params = new URLSearchParams(window.location.search);
+      const roomIdParam = params.get('roomid');
+      if (roomIdParam) {
+        $('#mode-online').prop('checked', true).trigger('change');
+        // Wait for the mode change's UI update to flush, ensure Firebase
+        // client is initialized, then join. Avoids brittle timing-based sleeps.
+        (async () => {
+          // Give the DOM a microtask tick for the radio change handler.
+          await new Promise((r) => setTimeout(r, 30));
+          if (!firebaseReady) await initFirebase();
+          if (firebaseReady) await joinRoom(roomIdParam.toUpperCase());
+        })();
+      }
     });
 
     // ==========================================
@@ -1388,9 +1640,17 @@
       if (chess.game_over()) return false;
       if (engineThinking) return false;
 
-      // In AI mode, restrict movements on AI turn
-      if (gameMode === 'ai' && chess.turn() !== playerColor) {
-        return false;
+      // In AI mode or online, restrict movements when it's not my turn
+      if (gameMode !== 'local') {
+        if (chess.turn() !== playerColor) return false;
+      }
+
+      // In online mode, additionally block if player isn't actually connected
+      if (gameMode === 'online') {
+        if (!multiplayer.active) return false;
+        if (multiplayer.myColor !== chess.turn()) return false;
+        // Wait for opponent before letting white or black move
+        if (multiplayer.myColor === 'w' && multiplayer.connection === 'connecting') return false;
       }
 
       // Restrict picking up opponent pieces
@@ -1432,6 +1692,14 @@
       playMoveSound(isCapture);
       highlightLastMove(source, target);
       updateGameStatus();
+
+      // Online mode: push the canonical last move to Firebase (read from chess.js
+      // so from/to/promotion always match the validated move).
+      if (gameMode === 'online') {
+        const history = chess.history({ verbose: true });
+        const last = history[history.length - 1];
+        if (last) multiplayerPushMove(last.from, last.to, last.promotion || null);
+      }
 
       // Trigger opponent bot move
       if (gameMode === 'ai') {
@@ -1546,6 +1814,8 @@
       let subtitle = '';
       const turnName = chess.turn() === 'w' ? 'White' : 'Black';
 
+      const isOnlineActive = gameMode === 'online' && multiplayer.active;
+
       if (chess.in_checkmate()) {
         title = 'Checkmate!';
         subtitle = `${turnName === 'White' ? 'Black' : 'White'} wins the game.`;
@@ -1565,19 +1835,48 @@
         }
         showGameOverModal(title, subtitle);
       } else if (chess.in_check()) {
-        title = 'Check!';
-        subtitle = `${turnName} is under threat.`;
+        if (isOnlineActive && multiplayer.connection === 'connected') {
+          const mineTurn = chess.turn() === multiplayer.myColor;
+          title = 'Check!';
+          subtitle = mineTurn ? 'Your king is under threat.' : 'Opponent is in check.';
+        } else {
+          title = 'Check!';
+          subtitle = `${turnName} is under threat.`;
+        }
       } else {
-        title = `${turnName}'s Turn`;
-        subtitle = 'Game in progress...';
+        if (isOnlineActive && multiplayer.connection === 'connected') {
+          const mineTurn = chess.turn() === multiplayer.myColor;
+          title = mineTurn ? "Your turn" : "Opponent's turn";
+          const oppLabel = multiplayer.myColor === 'w' ? 'Black' : 'White';
+          subtitle = mineTurn ? `Waiting after opponent (${oppLabel}) moves.` : `Waiting for opponent (${oppLabel})...`;
+        } else if (isOnlineActive) {
+          return; // wait-state banner already painted by updateOnlineStatusUI
+        } else {
+          title = `${turnName}'s Turn`;
+          subtitle = 'Game in progress...';
+        }
       }
 
       $('#status-title').text(title);
       $('#status-subtitle').text(subtitle);
 
       // Enable/Disable undo button
-      const minMoves = gameMode === 'ai' ? 2 : 1;
-      $('#undo-btn').prop('disabled', chess.history().length < minMoves);
+      let undoDisabled = true;
+      if (gameMode === 'ai') {
+        undoDisabled = chess.history().length < 2;
+      } else if (gameMode === 'local') {
+        undoDisabled = chess.history().length < 1;
+      }
+      // Online mode: always disable undo
+      $('#undo-btn').prop('disabled', undoDisabled);
+
+      // Restart button: disable when game in progress online
+      const $restart = $('.btn-grid button.btn-primary');
+      if (gameMode === 'online' && multiplayer.active && chess.history().length > 0) {
+        $restart.prop('disabled', true).attr('title', 'Leave the room to start a new game');
+      } else {
+        $restart.prop('disabled', false).removeAttr('title');
+      }
 
       // Manage turn indicator glows
       if (chess.turn() === 'w') {
@@ -1704,18 +2003,47 @@
     // ==========================================
     function onModeChange() {
       const selectedMode = $('input[name="game-mode"]:checked').val();
+      const prevMode = gameMode;
       gameMode = selectedMode;
+
+      // Leaving online mode -> tear down any active room first
+      if (prevMode === 'online' && selectedMode !== 'online' && multiplayer.active) {
+        leaveRoom();
+      }
 
       if (gameMode === 'local') {
         $('.ai-only-controls').slideUp(200);
+        $('.online-only-controls').slideUp(200);
         $('#opponent-name').text('Black Player');
         $('#opponent-icon').attr('class', 'fa-solid fa-user-ninja');
+      } else if (gameMode === 'online') {
+        $('.ai-only-controls').slideUp(200);
+        $('.online-only-controls').slideDown(200);
+        updateOpponentBarForMultiplayer();
+        updateOnlineStatusUI('disconnected', 'Create a room or join one to start.');
+        // Firebase is initialized lazily by createRoom() / joinRoom() so the
+        // engine badge can keep showing Stockfish status right now.
       } else {
         $('.ai-only-controls').slideDown(200);
+        $('.online-only-controls').slideUp(200);
         updateOpponentBarDetails();
       }
 
+      // Renames the "Engine Status" sidebar label so it makes sense in online mode
+      // (when it actually shows the Firebase connection status badge).
+      updateStatusSectionLabel();
       resetGame();
+    }
+
+    /**
+     * Renames the sidebar section header between "Engine Status" (AI / local)
+     * and "Connection" (online). The badge itself stays #engine-badge but we
+     * relabel its meaning through the parent label.
+     */
+    function updateStatusSectionLabel() {
+      const $lbl = $('#status-section-label');
+      if ($lbl.length === 0) return;
+      $lbl.text(gameMode === 'online' ? 'Connection' : 'Engine Status');
     }
 
     function onColorChange() {
@@ -1743,21 +2071,37 @@
 
     /**
      * Resets the entire match state and triggers initial engine moves if necessary.
+     * In ONLINE mode the game state lives in Firebase, so this resets ONLY when there
+     * is no active multiplayer room. If a room is active, the user should leave it
+     * first to start over.
      */
     function resetGame() {
       stopEngineSearch();
+
+      // Online mode: if we're inside a room, do not silently wipe the shared game.
+      if (gameMode === 'online' && multiplayer.active) {
+        showToast('Leave the room first to start a new game.', 'error');
+        return;
+      }
+
       chess.reset();
 
       // Configure player color assignment
-      const colorSelection = $('input[name="player-color"]:checked').val();
-      if (colorSelection === 'random') {
-        playerColor = Math.random() < 0.5 ? 'w' : 'b';
+      if (gameMode === 'online' && multiplayer.myColor) {
+        playerColor = multiplayer.myColor;
       } else {
-        playerColor = colorSelection;
+        const colorSelection = $('input[name="player-color"]:checked').val();
+        if (colorSelection === 'random') {
+          playerColor = Math.random() < 0.5 ? 'w' : 'b';
+        } else {
+          playerColor = colorSelection;
+        }
       }
 
       // Orient board direction
-      if (gameMode === 'ai') {
+      if (gameMode === 'online' && multiplayer.myColor) {
+        board.orientation(multiplayer.myColor === 'w' ? 'white' : 'black');
+      } else if (gameMode === 'ai') {
         board.orientation(playerColor === 'w' ? 'white' : 'black');
       } else {
         board.orientation('white');
@@ -1776,9 +2120,12 @@
 
     /**
      * Reverts actions. Undos two moves in Vs AI mode to keep game on player turn.
+     * Undo is disabled in ONLINE mode because the move log lives on the server.
      */
     function undoMove() {
       if (engineThinking) return;
+      // Online mode: no client-side undo because moves are shared via Firebase.
+      if (gameMode === 'online') return;
 
       stopEngineSearch();
 
@@ -1797,12 +2144,12 @@
       }
 
       board.position(chess.fen());
-      
+
       // Clear highlight indicators
       $('#board .square-55d63').removeClass('highlight-square check-square');
-      
+
       updateGameStatus();
-      
+
       // Safety trigger
       if (gameMode === 'ai') {
         checkEngineMove();
@@ -1897,6 +2244,14 @@
           highlightLastMove(currentPromotionMove.from, currentPromotionMove.to);
           updateGameStatus();
 
+          // Online mode: push the canonical last move (with the chosen promotion
+          // piece) to Firebase so the opponent sees the right resulting piece.
+          if (gameMode === 'online') {
+            const history = chess.history({ verbose: true });
+            const last = history[history.length - 1];
+            if (last) multiplayerPushMove(last.from, last.to, last.promotion || null);
+          }
+
           if (gameMode === 'ai') {
             setTimeout(checkEngineMove, 250);
           }
@@ -1986,6 +2341,616 @@
         tempChess.move(history[i]);
       }
       board.position(tempChess.fen());
+    }
+
+    // ==========================================
+    // FIREBASE REALTIME DATABASE - MULTIPLAYER
+    // ==========================================
+
+    /**
+     * Generates a random 6-character alphanumeric Room ID using only unambiguous
+     * characters (excluding 0/O, 1/I/L etc.) so players can dictate it easily.
+     */
+    function generateRoomId() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let id = '';
+      for (let i = 0; i < 6; i++) {
+        id += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return id;
+    }
+
+    /**
+     * Returns a persistent anonymous Player ID stored in localStorage.
+     * Used so that on page refresh we can reclaim our seat in the same room.
+     */
+    function getOrCreatePlayerId() {
+      let id = localStorage.getItem('chess_player_id');
+      if (!id) {
+        id = 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 10);
+        localStorage.setItem('chess_player_id', id);
+      }
+      return id;
+    }
+
+    /**
+     * Loads Firebase config from the Vercel serverless function, then initializes
+     * the Firebase app + RTDB. Returns true on success.
+     */
+    async function initFirebase() {
+      try {
+        const response = await fetch('/api/firebase-config');
+        if (!response.ok) {
+          let detail = '';
+          try { const err = await response.json(); detail = err.error || JSON.stringify(err); }
+          catch (_) { detail = response.statusText; }
+          console.error('Failed to fetch Firebase config:', detail);
+          updateFirebaseStatusBadge('offline', 'Config Error');
+          return false;
+        }
+        const config = await response.json();
+
+        if (!firebase.apps.length) {
+          firebaseApp = firebase.initializeApp(config);
+        } else {
+          firebaseApp = firebase.app();
+        }
+        firebaseDB = firebase.database();
+        firebaseReady = true;
+        updateFirebaseStatusBadge('online', 'Connected');
+        return true;
+      } catch (err) {
+        console.error('Firebase init error:', err);
+        updateFirebaseStatusBadge('offline', 'Offline');
+        return false;
+      }
+    }
+
+    /**
+     * Updates the small status badge in the sidebar to reflect Firebase state.
+     */
+    function updateFirebaseStatusBadge(state, label) {
+      const $badge = $('#engine-badge');
+      if (state === 'online') {
+        $badge.removeClass('offline').addClass('online').text(label || 'Online Ready');
+      } else {
+        $badge.removeClass('online').addClass('offline').text(label || 'Offline');
+      }
+    }
+
+    /**
+     * Creates a new Firebase room. The host is assigned WHITE. After creation the
+     * caller automatically subscribes to room events and starts listening for opponent
+     * moves. A copyable share-link is displayed in the UI.
+     */
+    async function createRoom() {
+      if (multiplayer.active) await leaveRoom();
+      if (!firebaseReady) {
+        const ok = await initFirebase();
+        if (!ok) {
+          showToast('Firebase is not configured on the server.', 'error');
+          return;
+        }
+      }
+      updateOnlineStatusUI('connecting', 'Creating room...');
+
+      const roomId = generateRoomId();
+      const pid = getOrCreatePlayerId();
+      const ref = firebaseDB.ref('rooms/' + roomId);
+
+      multiplayer.ref = ref;
+      multiplayer.roomId = roomId;
+      multiplayer.myPlayerId = pid;
+      multiplayer.myColor = 'w';
+
+      try {
+        await ref.set({
+          status: 'waiting',
+          players: { w: pid, b: null },
+          moves: {},
+          fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+          result: null,
+          createdAt: firebase.database.ServerValue.TIMESTAMP
+        });
+
+        // Clean up the slot automatically if we disconnect.
+        ref.child('players/w').onDisconnect().remove();
+        ref.child('status').onDisconnect().set('abandoned');
+
+        setupRoomListeners();
+        updateOnlineRoomUI();
+        updateOnlineStatusUI('waiting', 'Room created. Share the link below to invite a friend.');
+
+        // Reflect room in URL so refresh keeps the room.
+        window.history.replaceState({}, '', window.location.pathname + '?roomid=' + roomId);
+
+        // multiplayerSyncLocalFromRoom resets the local game AND attaches the
+        // move listener. Doing both here ensures we catch any incoming moves
+        // even before the opponent joins (defensive - usually triggers later
+        // when opp connects via the players listener).
+        multiplayerSyncLocalFromRoom();
+        updateOpponentBarForMultiplayer();
+      } catch (err) {
+        console.error('createRoom failed:', err);
+        showToast('Failed to create room: ' + (err.message || 'unknown error'), 'error');
+        multiplayer.ref = null;
+        multiplayer.roomId = null;
+        multiplayer.myColor = null;
+        multiplayer.myPlayerId = null;
+        updateOnlineStatusUI('error', 'Could not create room.');
+      }
+    }
+
+    /**
+     * Joins an existing room by ID. If our stored playerId matches one of the
+     * player slots we re-claim it (handles refresh). Otherwise we take whatever
+     * slot is empty (white -> black fallback).
+     */
+    async function joinRoom(roomId) {
+      const cleanId = (roomId || '').toUpperCase().trim();
+      if (!cleanId) return;
+      if (multiplayer.active && multiplayer.roomId === cleanId) return;
+      if (multiplayer.active) await leaveRoom();
+
+      if (!firebaseReady) {
+        const ok = await initFirebase();
+        if (!ok) {
+          showToast('Firebase is not configured on the server.', 'error');
+          return;
+        }
+      }
+      updateOnlineStatusUI('connecting', 'Joining room ' + cleanId + '...');
+
+      const pid = getOrCreatePlayerId();
+      const ref = firebaseDB.ref('rooms/' + cleanId);
+
+      let color = null;
+
+      try {
+        // Fast path: rejoin (refresh). If our id is already in a slot we don't
+        // mutate the room - we just re-claim our existing color.
+        const initialW = (await ref.child('players/w').once('value')).val();
+        const initialB = (await ref.child('players/b').once('value')).val();
+        if (initialW === pid) {
+          color = 'w';
+        } else if (initialB === pid) {
+          color = 'b';
+        } else {
+          // One atomic transaction over the entire `players` node lets us claim
+          // whichever slot is free without races between two simultaneous joiners.
+          // Returning `undefined` aborts the transaction (room full).
+          const tx = await ref.child('players').transaction((players) => {
+            if (players === null) players = {};
+            if (players.w === pid) { color = 'w'; return players; }
+            if (players.b === pid) { color = 'b'; return players; }
+            if (!players.w) {
+              players.w = pid;
+              color = 'w';
+              return players;
+            }
+            if (!players.b) {
+              players.b = pid;
+              color = 'b';
+              return players;
+            }
+            // Both slots already taken by someone else -> abort.
+            return undefined;
+          });
+
+          if (tx.committed && color === 'b') {
+            // Promote the room to playing now that Black has joined.
+            await ref.child('status').transaction((cur) => {
+              if (cur === 'finished' || cur === 'abandoned') return cur;
+              return 'playing';
+            });
+          }
+        }
+
+        if (!color) {
+          const roomSnap = await ref.once('value');
+          if (!roomSnap.exists()) {
+            showToast('Room not found.', 'error');
+            updateOnlineStatusUI('error', 'Room not found.');
+            return;
+          }
+          showToast('Room is full.', 'error');
+          updateOnlineStatusUI('error', 'Room is full.');
+          return;
+        }
+
+        multiplayer.ref = ref;
+        multiplayer.roomId = cleanId;
+        multiplayer.myPlayerId = pid;
+        multiplayer.myColor = color;
+
+        // Register cleanup if we drop.
+        ref.child('players/' + color).onDisconnect().remove();
+        ref.child('status').onDisconnect().set('abandoned');
+
+        setupRoomListeners();
+        updateOnlineRoomUI();
+        updateOnlineStatusUI(
+          color === 'b' ? 'connected' : 'waiting',
+          color === 'b'
+            ? 'Joined room as Black. Waiting for White to move.'
+            : 'Reclaimed host seat. Share the link to invite a friend.'
+        );
+
+        window.history.replaceState({}, '', window.location.pathname + '?roomid=' + cleanId);
+
+        multiplayerSyncLocalFromRoom();
+        updateOpponentBarForMultiplayer();
+      } catch (err) {
+        console.error('joinRoom failed:', err);
+        showToast('Failed to join room: ' + (err.message || 'unknown error'), 'error');
+        updateOnlineStatusUI('error', 'Could not join room.');
+      }
+    }
+
+    /**
+     * Detaches all listeners, removes our seat from the room if it's still ours,
+     * and resets local multiplayer state.
+     */
+    async function leaveRoom() {
+      if (!multiplayer.ref) {
+        multiplayer.active = false;
+        updateOnlineRoomUI();
+        return;
+      }
+      const ref = multiplayer.ref;
+      const color = multiplayer.myColor;
+      const pid = multiplayer.myPlayerId;
+
+      try {
+        if (color && pid) {
+          ref.child('players/' + color).onDisconnect().cancel();
+          ref.child('status').onDisconnect().cancel();
+
+          // Only remove our slot if it still holds our id.
+          const slotSnap = await ref.child('players/' + color).once('value');
+          if (slotSnap.val() === pid) {
+            await ref.child('players/' + color).remove();
+          }
+        }
+      } catch (e) {
+        console.warn('Cleanup on leave failed:', e);
+      }
+
+      try { ref.off(); } catch (_) {}
+
+      multiplayer.active = false;
+      multiplayer.ref = null;
+      multiplayer.roomId = null;
+      multiplayer.myPlayerId = null;
+      multiplayer.myColor = null;
+      multiplayer.connection = 'disconnected';
+      multiplayer.initialSyncedMoves = 0;
+
+      window.history.replaceState({}, '', window.location.pathname);
+
+      updateOnlineRoomUI();
+      updateOnlineStatusUI('disconnected', 'Left the room.');
+      updateOpponentBarForMultiplayer();
+    }
+
+    /**
+     * Subscribes the client to room-level non-move updates (status, players).
+     * The move listener is attached by `attachMoveListener` AFTER
+     * `multiplayerSyncLocalFromRoom` finishes loading the existing move set, so
+     * we never race between the listener replaying moves and a one-shot sync
+     * resetting the local board.
+     */
+    function setupRoomListeners() {
+      if (!multiplayer.ref) return;
+      multiplayer.active = true;
+
+      multiplayer.ref.child('players').on('value', (snap) => {
+        const players = snap.val() || {};
+        const oppPresent = !!((multiplayer.myColor === 'w' && players.b) || (multiplayer.myColor === 'b' && players.w));
+        const $status = $('#online-opponent-status');
+        if (oppPresent) {
+          $status.html('<i class="fa-solid fa-circle-check" style="color: #4ade80;"></i> Connected');
+          if (multiplayer.connection === 'waiting') {
+            multiplayer.connection = 'connected';
+            updateOnlineStatusUI('connected', 'Opponent connected. Game is live.');
+            multiplayerSyncLocalFromRoom();
+          }
+        } else {
+          $status.html('<i class="fa-solid fa-circle-dot" style="color: var(--accent-color); animation: pulse 1s infinite alternate;"></i> Waiting...');
+          if (multiplayer.myColor === 'w' && multiplayer.connection === 'connected') {
+            multiplayer.connection = 'waiting';
+            updateOnlineStatusUI('waiting', 'Opponent left. Waiting for them to return...');
+          }
+        }
+        updateOpponentBarForMultiplayer();
+        updateGameStatus();
+      });
+
+      multiplayer.ref.child('status').on('value', (snap) => {
+        const status = snap.val();
+        if (status === 'abandoned') {
+          updateOnlineStatusUI('disconnected', 'Opponent disconnected. Game paused.');
+        } else if (status === 'finished') {
+          multiplayer.connection = 'finished';
+          updateGameStatus();
+        } else if (status === 'playing') {
+          updateGameStatus();
+        }
+      });
+    }
+
+    /**
+     * Attaches the move listener so that NEW moves from the opponent get applied
+     * incrementally. Existing moves are handled by `multiplayerSyncLocalFromRoom`
+     * which is responsible for replaying them in order before this is called.
+     * We deduplicate via `multiplayer.lastMoveKey` (highest push-id seen) so we
+     * do not re-apply moves that the sync just replayed.
+     */
+    function attachMoveListener() {
+      if (!multiplayer.ref) return;
+      multiplayer.ref.child('moves').off('child_added');
+      multiplayer.ref.child('moves').on('child_added', (snap) => {
+        const mv = snap.val();
+        if (!mv) return;
+        const key = snap.key;
+        if (multiplayer.lastMoveKey && key && key <= multiplayer.lastMoveKey) return;
+        multiplayer.lastMoveKey = key || multiplayer.lastMoveKey;
+        multiplayerApplyRemoteMove(mv);
+      });
+    }
+
+    /**
+     * Applies a remote move to local chess state and updates the board.
+     * Uses chess.js for validation - if the move is invalid (rare) we ignore.
+     */
+    function multiplayerApplyRemoteMove(mv) {
+      if (!mv || !mv.from || !mv.to) return;
+      if (chess.game_over()) return;
+      const result = chess.move({
+        from: mv.from,
+        to: mv.to,
+        promotion: mv.promotion || 'q'
+      });
+      if (result) {
+        board.position(chess.fen());
+        const isCapture = result.flags.includes('c') || result.flags.includes('e');
+        playMoveSound(isCapture);
+        highlightLastMove(mv.from, mv.to);
+        updateGameStatus();
+      } else {
+        console.warn('Could not apply remote move:', mv);
+      }
+    }
+
+    /**
+     * Reads all moves currently in the room and replays them locally so a player
+     * who joins mid-game sees the right board position. After syncing it attaches
+     * the move listener so subsequent opponent moves arrive incrementally.
+     * The order: display-state sync -> detach listener -> snapshot read ->
+     * apply in order -> re-attach.
+     */
+    function multiplayerSyncLocalFromRoom() {
+      if (!multiplayer.ref) return;
+      // Stop any in-flight AI search in case the user switched from AI to Online.
+      stopEngineSearch();
+      // Sync local display state with our assigned room color so drag checks
+      // and active-turn highlights stay correct.
+      playerColor = multiplayer.myColor || 'w';
+      board.orientation(playerColor === 'w' ? 'white' : 'black');
+
+      // Prevent the child_added listener from racing the snapshot read - any
+      // existing children would otherwise fire here and double-apply moves.
+      multiplayer.ref.child('moves').off('child_added');
+
+      multiplayer.ref.child('moves').once('value', (snap) => {
+        if (!multiplayer.ref || multiplayer.myColor === null) return;
+        const movesObj = snap.val() || {};
+        const keys = Object.keys(movesObj).sort();
+        chess.reset();
+        let lastApplied = null;
+        let maxKey = null;
+        for (const k of keys) {
+          const mv = movesObj[k];
+          if (!mv) continue;
+          // Don't skip our own moves on refresh - we MUST replay every move so
+          // the local board catches up to what is already in the room. The
+          // listener dedupe is handled by `multiplayer.lastMoveKey` below.
+          const r = chess.move({
+            from: mv.from,
+            to: mv.to,
+            promotion: mv.promotion || 'q'
+          });
+          if (r) lastApplied = mv;
+          maxKey = k;
+        }
+        if (!multiplayer.ref || multiplayer.myColor === null) return;
+        board.position(chess.fen());
+        if (lastApplied) highlightLastMove(lastApplied.from, lastApplied.to);
+        updateGameStatus();
+        // From this point on, use the listener to handle incremental moves.
+        multiplayer.lastMoveKey = maxKey;
+        attachMoveListener();
+      });
+    }
+
+    /**
+     * Pushes the just-made local move to Firebase. Called from onDrop / selectPromotion
+     * after the move has been validated and applied locally.
+     */
+    function multiplayerPushMove(from, to, promotion) {
+      if (!multiplayer.ref || !multiplayer.myPlayerId) return;
+
+      const moveData = {
+        from: from,
+        to: to,
+        promotion: promotion || '',
+        playerId: multiplayer.myPlayerId,
+        player: multiplayer.myColor,
+        ts: firebase.database.ServerValue.TIMESTAMP
+      };
+
+      multiplayer.ref.child('moves').push(moveData).then(() => {
+        if (chess.game_over()) {
+          let result = 'draw';
+          if (chess.in_checkmate()) {
+            result = multiplayer.myColor === 'w' ? 'white' : 'black';
+          }
+          multiplayer.ref.update({
+            status: 'finished',
+            result: result,
+            fen: chess.fen()
+          }).catch((e) => console.warn('Failed to update finished status:', e));
+        }
+      }).catch((err) => {
+        console.error('Failed to push move:', err);
+        showToast('Move sync failed.', 'error');
+      });
+    }
+
+    /**
+     * Resets local chess state to the starting position and updates UI for online play.
+     */
+    function multiplayerResetLocalGame() {
+      stopEngineSearch();
+      chess.reset();
+      playerColor = multiplayer.myColor || 'w';
+      board.orientation(playerColor === 'w' ? 'white' : 'black');
+      board.position('start');
+      $('#board .square-55d63').removeClass('highlight-square check-square');
+      updateGameStatus();
+    }
+
+    /**
+     * Copies the current room share-link to the user's clipboard.
+     */
+    function copyRoomLink() {
+      if (!multiplayer.roomId) return;
+      const url = window.location.origin + window.location.pathname + '?roomid=' + multiplayer.roomId;
+      const $input = $('#share-link-input');
+
+      const fallback = () => {
+        $input.val(url).select();
+        try { document.execCommand('copy'); } catch (_) {}
+        showToast('Room link copied!');
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Room link copied!');
+        }).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+
+    /**
+     * Reads the join input field and calls joinRoom.
+     */
+    function joinRoomManual() {
+      const val = $('#join-room-input').val().trim().toUpperCase();
+      if (!val) {
+        showToast('Enter a Room ID first.', 'error');
+        return;
+      }
+      joinRoom(val);
+    }
+
+    /**
+     * Updates the in-room / pre-join UI blocks based on multiplayer.active state.
+     */
+    function updateOnlineRoomUI() {
+      if (multiplayer.active && multiplayer.roomId) {
+        $('#online-prejoin').hide();
+        $('#online-inroom').show();
+        $('#online-roomid').text(multiplayer.roomId);
+
+        const url = window.location.origin + window.location.pathname + '?roomid=' + multiplayer.roomId;
+        $('#share-link-input').val(url);
+
+        const colorIcon = multiplayer.myColor === 'w'
+          ? '<i class="fa-solid fa-chess-king" style="color: #fff; text-shadow: 0 0 1px #000;"></i> White'
+          : '<i class="fa-solid fa-chess-king" style="color: #4b5563;"></i> Black';
+        $('#online-mycolor').html(colorIcon);
+
+        $('#online-status-card').removeClass('error');
+      } else {
+        $('#online-prejoin').show();
+        $('#online-inroom').hide();
+      }
+    }
+
+    /**
+     * Updates the small banner above the board (status-title/subtitle) to reflect
+     * the current multiplayer connection state.
+     */
+    function updateOnlineStatusUI(state, msg) {
+      multiplayer.connection = state;
+
+      updateOpponentBarForMultiplayer();
+
+      const $title = $('#status-title');
+      const $sub = $('#status-subtitle');
+
+      if (state === 'error') {
+        $title.text('Connection Error');
+        $sub.text(msg || 'Multiplayer unavailable.');
+        $('#online-status-card').addClass('error');
+      } else if (state === 'disconnected') {
+        $title.text('Not Connected');
+        $sub.text(msg || 'Choose a game mode to start.');
+        $('#online-status-card').removeClass('error');
+      } else if (state === 'connecting') {
+        $title.text('Connecting...');
+        $sub.text(msg || '');
+      } else if (state === 'waiting') {
+        if (gameMode === 'online') {
+          $title.text('Waiting for Opponent');
+          $sub.text(msg || 'Share the room link to invite a friend.');
+        }
+      } else if (state === 'connected' && gameMode === 'online') {
+        updateGameStatus();
+        return;
+      } else if (state === 'finished') {
+        return;
+      }
+    }
+
+    /**
+     * Adjusts the opponent player-bar's icon/label to reflect online state.
+     */
+    function updateOpponentBarForMultiplayer() {
+      if (gameMode !== 'online') return;
+      const $name = $('#opponent-name');
+      const $icon = $('#opponent-icon');
+
+      if (!multiplayer.active) {
+        $icon.attr('class', 'fa-solid fa-globe');
+        $name.text('Online Opponent');
+        return;
+      }
+
+      $icon.attr('class', 'fa-solid fa-user');
+      if (multiplayer.myColor === 'w') {
+        if (multiplayer.connection === 'connected') {
+          $name.html(`Online Opponent <span style="color: var(--text-muted); font-size: 0.75rem;">(Black)</span>`);
+        } else {
+          $name.html(`<span style="color: var(--text-muted);">Waiting for Opponent...</span>`);
+        }
+      } else {
+        $name.html(`Online Opponent <span style="color: var(--text-muted); font-size: 0.75rem;">(White)</span>`);
+      }
+    }
+
+    /**
+     * Floating toast for non-blocking notifications.
+     */
+    function showToast(msg, type) {
+      const $t = $('<div>').addClass('toast-notif' + (type === 'error' ? ' error' : '')).text(msg);
+      $('body').append($t);
+      setTimeout(() => {
+        $t.css({ transition: 'opacity 0.3s, transform 0.3s', opacity: 0, transform: 'translate(-50%, 20px)' });
+        setTimeout(() => $t.remove(), 350);
+      }, 2400);
     }
   </script>
 </body>
