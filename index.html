@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess 2.0 - Premium Multiplayer Chess</title>
+  <meta name="description" content="Play Chess 2.0. Experience modern design themes including Classic, Neon, Gold, and Platinum. Play offline, challenge high-performance Stockfish bots, or battle friends online via Firebase.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-classic">
+  <div class="app-container">
+    
+    <!-- HEADER BAR -->
+    <header class="main-header">
+      <div class="logo-area" id="btn-home">
+        <span class="logo-icon">👑</span>
+        <h1>Chess <span class="logo-accent">2.0</span></h1>
+      </div>
+      
+      <div class="header-controls">
+        <!-- Theme Selector -->
+        <div class="selector-wrapper">
+          <label for="theme-select" class="sr-only">Theme</label>
+          <select id="theme-select" class="premium-select" title="Change board style">
+            <option value="classic">🌲 Classic Wood</option>
+            <option value="neon">⚡ Cyber Neon</option>
+            <option value="gold">✨ Premium Gold</option>
+            <option value="platinum">❄️ Platinum Metal</option>
+          </select>
+        </div>
+        
+        <!-- Online Connection Badge -->
+        <div id="connection-badge" class="connection-badge offline">
+          <span class="badge-dot"></span>
+          <span class="badge-text">Firebase Offline</span>
+        </div>
+
+        <button id="btn-config-db" class="btn-icon-setting" title="Firebase Settings" aria-label="Firebase Settings">
+          ⚙️
+        </button>
+      </div>
+    </header>
+
+    <main class="game-content">
+      
+      <!-- LANDING / MENU VIEW -->
+      <section id="menu-view" class="view-panel active">
+        <div class="landing-hero">
+          <h2>Select Game Mode</h2>
+          <p class="subtitle">Challenge yourself against our engine or play with friends worldwide</p>
+        </div>
+
+        <div class="mode-grid">
+          <!-- Vs Computer Card -->
+          <div class="mode-card" id="card-vs-bot">
+            <div class="card-icon">🤖</div>
+            <h3>Vs Computer</h3>
+            <p>Play against local Stockfish engine with adjustable difficulties</p>
+            <div class="difficulty-picker">
+              <button class="diff-btn active" data-level="beginner">Beginner</button>
+              <button class="diff-btn" data-level="intermediate">Intermediate</button>
+              <button class="diff-btn" data-level="master">Master</button>
+              <button class="diff-btn" data-level="grandmaster">Grandmaster</button>
+            </div>
+            <button class="btn btn-primary btn-start-game" data-mode="bot">Start Match</button>
+          </div>
+
+          <!-- Offline Local Card -->
+          <div class="mode-card" id="card-local">
+            <div class="card-icon">👥</div>
+            <h3>Local Pass & Play</h3>
+            <p>Play with a friend on the same device screen offline</p>
+            <button class="btn btn-primary btn-start-game" data-mode="local">Start Local</button>
+          </div>
+
+          <!-- Online Multiplayer Card -->
+          <div class="mode-card" id="card-online">
+            <div class="card-icon">🌐</div>
+            <h3>Online Multiplayer</h3>
+            <p>Join or create custom chess rooms using Firebase Realtime Database</p>
+            <div class="online-inputs">
+              <div class="room-action-buttons">
+                <button id="btn-create-room" class="btn btn-accent">Create Room</button>
+                <div class="join-input-group">
+                  <input type="text" id="input-room-id" placeholder="Enter Room ID" maxLength="8">
+                  <button id="btn-join-room" class="btn btn-secondary">Join</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ARENA VIEW (IN-GAME) -->
+      <section id="arena-view" class="view-panel">
+        <div class="arena-grid">
+          
+          <!-- CHESSBOARD SIDE -->
+          <div class="board-column">
+            <!-- Opponent Panel -->
+            <div class="player-panel opponent-panel">
+              <div class="player-info">
+                <span class="player-avatar" id="opponent-color-dot">⚫</span>
+                <span class="player-name" id="opponent-name">Computer</span>
+                <span class="player-role-badge" id="opponent-badge">Bot</span>
+              </div>
+              <div class="captured-pieces" id="opponent-captures"></div>
+              <div class="timer" id="opponent-timer">--:--</div>
+            </div>
+
+            <!-- Board Container -->
+            <div class="board-container-outer">
+              <div class="board-wrapper">
+                <div id="chessboard" class="chess-board">
+                  <!-- JS builds squares and pieces here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Player Panel -->
+            <div class="player-panel player-panel-local">
+              <div class="player-info">
+                <span class="player-avatar" id="player-color-dot">⚪</span>
+                <span class="player-name" id="player-name">Player 1</span>
+                <span class="player-role-badge" id="player-badge">You</span>
+              </div>
+              <div class="captured-pieces" id="player-captures"></div>
+              <div class="timer" id="player-timer">--:--</div>
+            </div>
+          </div>
+
+          <!-- CONTROL & STATS SIDE -->
+          <div class="control-column">
+            <div class="status-card glass">
+              <div class="game-meta-info">
+                <span id="game-status-label" class="status-badge">Vs Computer</span>
+                <span id="room-display-id" class="room-badge hidden">Room: <span class="room-val"></span></span>
+              </div>
+              <div class="game-status-text" id="game-status-message">Your Turn</div>
+            </div>
+
+            <!-- Sharing details for Online Mode -->
+            <div id="online-share-panel" class="share-panel glass hidden">
+              <p>Invite a friend to play by sending this link:</p>
+              <div class="share-input-group">
+                <input type="text" id="share-link-input" readonly value="">
+                <button id="btn-copy-link" class="btn btn-sm btn-accent">Copy Link</button>
+              </div>
+            </div>
+
+            <!-- Move History Panel -->
+            <div class="moves-panel glass">
+              <h4>Move Log</h4>
+              <div class="moves-scroll" id="moves-log-container">
+                <table class="moves-table" id="moves-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>White</th>
+                      <th>Black</th>
+                    </tr>
+                  </thead>
+                  <tbody id="moves-tbody">
+                    <!-- Moves inserted dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- In-game Actions -->
+            <div class="action-buttons-grid">
+              <button id="btn-flip" class="btn btn-secondary">🔄 Flip Board</button>
+              <button id="btn-draw" class="btn btn-secondary">🤝 Offer Draw</button>
+              <button id="btn-resign" class="btn btn-danger">🏳️ Resign</button>
+              <button id="btn-rematch" class="btn btn-accent hidden">🔄 Offer Rematch</button>
+              <button id="btn-exit" class="btn btn-outline">🏠 Main Menu</button>
+            </div>
+
+            <!-- Online Chat Box -->
+            <div id="chat-panel" class="chat-panel glass hidden">
+              <h4>Game Chat</h4>
+              <div class="chat-messages" id="chat-messages-box">
+                <!-- Messages dynamic -->
+              </div>
+              <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type a message..." maxLength="150">
+                <button id="btn-send-chat" class="btn btn-accent">Send</button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <p>Chess 2.0 &copy; 2026. Made with vanilla HTML, CSS & JS. Powered by Stockfish.js & Firebase.</p>
+    </footer>
+
+    <!-- PROMOTION SELECTION MODAL -->
+    <div id="modal-promotion" class="modal-overlay">
+      <div class="modal-content glass">
+        <h3>Pawn Promotion</h3>
+        <p>Choose a piece to promote your pawn to:</p>
+        <div class="promotion-choices">
+          <div class="promo-choice" data-piece="q">
+            <span class="promo-icon">♛</span>
+            <span class="promo-label">Queen</span>
+          </div>
+          <div class="promo-choice" data-piece="r">
+            <span class="promo-icon">♜</span>
+            <span class="promo-label">Rook</span>
+          </div>
+          <div class="promo-choice" data-piece="b">
+            <span class="promo-icon">♝</span>
+            <span class="promo-label">Bishop</span>
+          </div>
+          <div class="promo-choice" data-piece="n">
+            <span class="promo-icon">♞</span>
+            <span class="promo-label">Knight</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER / REMATCH NOTIFICATION MODAL -->
+    <div id="modal-gameover" class="modal-overlay">
+      <div class="modal-content glass text-center">
+        <h2 id="gameover-title">Game Over</h2>
+        <p id="gameover-reason">Checkmate</p>
+        <div class="modal-actions">
+          <button id="btn-gameover-rematch" class="btn btn-accent">Play Rematch</button>
+          <button id="btn-gameover-menu" class="btn btn-secondary">Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIREBASE MANUAL CONFIG MODAL -->
+    <div id="modal-firebase-config" class="modal-overlay">
+      <div class="modal-content glass">
+        <h3>Firebase Configuration</h3>
+        <p>If you are running this app locally or outside Vercel, paste your Firebase Realtime Database configuration below to enable online play.</p>
+        <div class="form-group">
+          <label for="fb-config-json">Firebase Config JSON Object:</label>
+          <textarea id="fb-config-json" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "your-app.firebaseapp.com",
+  "databaseURL": "https://your-app-default-rtdb.firebaseio.com",
+  "projectId": "your-app",
+  "storageBucket": "your-app.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456:web:12345"
+}'></textarea>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-save-fb-config" class="btn btn-accent">Save Config</button>
+          <button id="btn-clear-fb-config" class="btn btn-danger">Clear Saved</button>
+          <button id="btn-close-fb-config" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAYER NAME SETTINGS DIALOG -->
+    <div id="modal-name-prompt" class="modal-overlay">
+      <div class="modal-content glass text-center">
+        <h3>Welcome to Chess 2.0</h3>
+        <p>Choose your player name to get started:</p>
+        <div class="form-group">
+          <input type="text" id="player-display-name-input" placeholder="e.g. Garry Kasparov" maxLength="20" required>
+        </div>
+        <button id="btn-save-display-name" class="btn btn-primary w-100">Proceed to Game</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CDN scripts -->
+  <!-- Firebase Compat App & DB -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  
+  <!-- Chess.js Rule Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  
+  <!-- Main Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
