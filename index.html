@@ -2487,64 +2487,70 @@
      * slot is empty (white -> black fallback).
      */
     async function joinRoom(roomId) {
-      const cleanId = (roomId || '').toUpperCase().trim();
-      if (!cleanId) return;
-      if (multiplayer.active && multiplayer.roomId === cleanId) return;
-      if (multiplayer.active) await leaveRoom();
+    const ref = firebaseDB.ref('rooms/' + roomId);
 
-      if (!firebaseReady) {
-        const ok = await initFirebase();
-        if (!ok) {
-          showToast('Firebase is not configured on the server.', 'error');
-          return;
-        }
-      }
-      updateOnlineStatusUI('connecting', 'Joining room ' + cleanId + '...');
+    const roomSnap = await ref.once('value');
+    const room = roomSnap.val();
 
-      const pid = getOrCreatePlayerId();
-      const ref = firebaseDB.ref('rooms/' + cleanId);
+    if (!room) {
+        throw new Error('Room not found');
+    }
 
-      let color = null;
+    // Host is already White
+    if (room.players?.w === multiplayer.playerId) {
+        multiplayer.myColor = 'w';
+    }
 
-      try {
-        // Fast path: rejoin (refresh). If our id is already in a slot we don't
-        // mutate the room - we just re-claim our existing color.
-        const initialW = (await ref.child('players/w').once('value')).val();
-        const initialB = (await ref.child('players/b').once('value')).val();
-        if (initialW === pid) {
-          color = 'w';
-        } else if (initialB === pid) {
-          color = 'b';
-        } else {
-          // One atomic transaction over the entire `players` node lets us claim
-          // whichever slot is free without races between two simultaneous joiners.
-          // Returning `undefined` aborts the transaction (room full).
-          const tx = await ref.child('players').transaction((players) => {
-            if (players === null) players = {};
-            if (players.w === pid) { color = 'w'; return players; }
-            if (players.b === pid) { color = 'b'; return players; }
-            if (!players.w) {
-              players.w = pid;
-              color = 'w';
-              return players;
+    // Already joined earlier as Black
+    else if (room.players?.b === multiplayer.playerId) {
+        multiplayer.myColor = 'b';
+    }
+
+    // New player: atomically claim BLACK only
+    else {
+        const result = await ref.child('players/b').transaction((currentBlack) => {
+
+            // Black slot is occupied
+            if (currentBlack !== null && currentBlack !== undefined) {
+                return;
             }
-            if (!players.b) {
-              players.b = pid;
-              color = 'b';
-              return players;
-            }
-            // Both slots already taken by someone else -> abort.
-            return undefined;
-          });
 
-          if (tx.committed && color === 'b') {
-            // Promote the room to playing now that Black has joined.
-            await ref.child('status').transaction((cur) => {
-              if (cur === 'finished' || cur === 'abandoned') return cur;
-              return 'playing';
-            });
-          }
+            // Claim Black
+            return multiplayer.playerId;
+        });
+
+        if (!result.committed) {
+            throw new Error('Room is full');
         }
+
+        multiplayer.myColor = 'b';
+    }
+
+    multiplayer.roomId = roomId;
+    multiplayer.ref = ref;
+    multiplayer.active = true;
+
+    // Remove our player slot when disconnected
+    ref.child('players/' + multiplayer.myColor)
+        .onDisconnect()
+        .remove();
+
+    console.log(
+        'Joined room:',
+        roomId,
+        'Color:',
+        multiplayer.myColor
+    );
+
+    setupMultiplayerListeners();
+
+    await ref.child('status').transaction((status) => {
+        if (status === 'finished') return status;
+        return 'playing';
+    });
+
+    updateMultiplayerUI();
+}
 
         if (!color) {
           const roomSnap = await ref.once('value');
