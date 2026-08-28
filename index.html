@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chess 2.0 - Premium Web Chess</title>
-  
+
   <!-- CDNs for styles -->
   <!-- Font Awesome for modern icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -950,10 +950,10 @@
 
   <!-- APP CONTAINER -->
   <main class="app-container">
-    
+
     <!-- LEFT COLUMN: CHESS PLAY AREA -->
     <section class="play-area">
-      
+
       <!-- OPPONENT PLAYER BAR -->
       <div id="opponent-bar" class="player-bar player-panel-black">
         <div class="player-info">
@@ -993,14 +993,14 @@
       <!-- BOARD CONTROLS -->
       <div class="dashboard-card">
         <h2 class="section-title"><i class="fa-solid fa-sliders"></i> Game Controls</h2>
-        
+
         <!-- Game Mode Selection -->
         <div class="control-group">
           <span class="section-label">Game Mode</span>
           <div class="radio-toggle-group">
             <input type="radio" id="mode-ai" name="game-mode" value="ai" checked>
             <label for="mode-ai"><i class="fa-solid fa-robot"></i> Vs AI Bot</label>
-            
+
             <input type="radio" id="mode-local" name="game-mode" value="local">
             <label for="mode-local"><i class="fa-solid fa-users"></i> Local 2-Player</label>
 
@@ -1068,13 +1068,13 @@
             <div class="radio-toggle-group">
               <input type="radio" id="diff-1" name="difficulty" value="1" checked>
               <label for="diff-1">Lvl 1<span class="diff-desc">Beginner</span></label>
-              
+
               <input type="radio" id="diff-2" name="difficulty" value="2">
               <label for="diff-2">Lvl 2<span class="diff-desc">Medium</span></label>
-              
+
               <input type="radio" id="diff-3" name="difficulty" value="3">
               <label for="diff-3">Lvl 3<span class="diff-desc">Hard</span></label>
-              
+
               <input type="radio" id="diff-4" name="difficulty" value="4">
               <label for="diff-4">Lvl 4<span class="diff-desc">Pro</span></label>
             </div>
@@ -1086,10 +1086,10 @@
             <div class="radio-toggle-group">
               <input type="radio" id="color-white" name="player-color" value="w" checked>
               <label for="color-white"><i class="fa-solid fa-chess-king" style="color: #fff; text-shadow: 0 0 1px #000;"></i> White</label>
-              
+
               <input type="radio" id="color-black" name="player-color" value="b">
               <label for="color-black"><i class="fa-solid fa-chess-king" style="color: #4b5563;"></i> Black</label>
-              
+
               <input type="radio" id="color-random" name="player-color" value="random">
               <label for="color-random"><i class="fa-solid fa-shuffle"></i> Random</label>
             </div>
@@ -1297,7 +1297,7 @@
      */
     function initStockfish() {
       updateEngineStatusBadge('initializing');
-      
+
       try {
         // Construct code that runs inside the worker thread
         const workerCode = `
@@ -1307,16 +1307,16 @@
             postMessage({type: 'error', message: e.toString()});
           }
         `;
-        
+
         const blob = new Blob([workerCode], { type: 'application/javascript' });
         const blobUrl = URL.createObjectURL(blob);
-        
+
         stockfishWorker = new Worker(blobUrl);
 
         // Receive engine evaluation responses from background worker
         stockfishWorker.onmessage = function(e) {
           const message = e.data;
-          
+
           if (message && message.type === 'error') {
             console.error('Stockfish worker internal script loading error:', message.message);
             handleStockfishOffline();
@@ -1367,7 +1367,7 @@
       if (message.startsWith('bestmove')) {
         const parts = message.split(' ');
         const moveStr = parts[1];
-        
+
         if (moveStr && moveStr !== '(none)') {
           applyEngineMove(moveStr);
         } else {
@@ -1404,7 +1404,7 @@
           const moves = chess.moves({ verbose: true });
           if (moves.length === 0) return;
           const randomMove = moves[Math.floor(Math.random() * moves.length)];
-          
+
           const isCapture = randomMove.flags.includes('c') || randomMove.flags.includes('e');
           chess.move(randomMove);
           board.position(chess.fen());
@@ -1426,7 +1426,7 @@
       // Setup parameters for Level 2 (Intermediate), 3 (Advanced), 4 (Grandmaster)
       let skillLevel = 3;
       let depth = 5;
-      
+
       if (difficultyLevel === 3) {
         skillLevel = 10;
         depth = 10;
@@ -1488,7 +1488,7 @@
       // Force delay to simulate "thinking" and avoid instantaneous moves
       setTimeout(function() {
         const moves = chess.moves({ verbose: true });
-        
+
         if (moves.length === 0) {
           engineThinking = false;
           updateThinkingStatus(false);
@@ -1538,7 +1538,7 @@
 
       let bestMove = moves[0];
       const isMaximizing = chess.turn() === 'w';
-      
+
       let bestValue = isMaximizing ? -Infinity : Infinity;
 
       for (let i = 0; i < moves.length; i++) {
@@ -2179,7 +2179,7 @@
         if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        
+
         if (audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
@@ -2194,10 +2194,10 @@
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(750, audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.12);
-          
+
           gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + 0.12);
-          
+
           osc.start();
           osc.stop(audioCtx.currentTime + 0.12);
         } else {
@@ -2205,10 +2205,10 @@
           osc.type = 'sine';
           osc.frequency.setValueAtTime(320, audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(260, audioCtx.currentTime + 0.07);
-          
+
           gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + 0.07);
-          
+
           osc.start();
           osc.stop(audioCtx.currentTime + 0.07);
         }
@@ -2291,7 +2291,7 @@
       document.body.setAttribute('data-theme', themeName);
       localStorage.setItem('chess_theme', themeName);
       $('#theme-select').val(themeName);
-      
+
       // Trigger size check to keep canvas fitting wrapper
       if (board) {
         board.resize();
@@ -2304,7 +2304,7 @@
     function updateThinkingStatus(isThinking) {
       const badge = $('#thinking-badge');
       const text = $('#thinking-text');
-      
+
       if (isThinking) {
         badge.addClass('active');
         text.text('AI is Thinking...');
@@ -2455,7 +2455,6 @@
 
         // Clean up the slot automatically if we disconnect.
         ref.child('players/w').onDisconnect().remove();
-        ref.child('status').onDisconnect().set('abandoned');
 
         setupRoomListeners();
         updateOnlineRoomUI();
@@ -2482,96 +2481,70 @@
     }
 
     /**
-     * Joins an existing room by ID. If our stored playerId matches one of the
-     * player slots we re-claim it (handles refresh). Otherwise we take whatever
-     * slot is empty (white -> black fallback).
+     * Joins an existing room. The room creator is always White and a new
+     * player can only claim the Black slot. The transaction prevents two
+     * clients from claiming Black simultaneously.
      */
     async function joinRoom(roomId) {
-    const ref = firebaseDB.ref('rooms/' + roomId);
+      const cleanId = String(roomId || '').trim().toUpperCase();
+      if (!cleanId) {
+        showToast('Enter a valid Room ID.', 'error');
+        return;
+      }
 
-    const roomSnap = await ref.once('value');
-    const room = roomSnap.val();
+      if (multiplayer.active) await leaveRoom();
 
-    if (!room) {
-        throw new Error('Room not found');
-    }
+      if (!firebaseReady) {
+        const ok = await initFirebase();
+        if (!ok) {
+          showToast('Firebase is not configured on the server.', 'error');
+          return;
+        }
+      }
 
-    // Host is already White
-    if (room.players?.w === multiplayer.playerId) {
-        multiplayer.myColor = 'w';
-    }
+      updateOnlineStatusUI('connecting', 'Joining room...');
+      const ref = firebaseDB.ref('rooms/' + cleanId);
+      const pid = getOrCreatePlayerId();
 
-    // Already joined earlier as Black
-    else if (room.players?.b === multiplayer.playerId) {
-        multiplayer.myColor = 'b';
-    }
-
-    // New player: atomically claim BLACK only
-    else {
-        const result = await ref.child('players/b').transaction((currentBlack) => {
-
-            // Black slot is occupied
-            if (currentBlack !== null && currentBlack !== undefined) {
-                return;
-            }
-
-            // Claim Black
-            return multiplayer.playerId;
-        });
-
-        if (!result.committed) {
-            throw new Error('Room is full');
+      try {
+        const roomSnap = await ref.once('value');
+        if (!roomSnap.exists()) {
+          showToast('Room not found.', 'error');
+          updateOnlineStatusUI('error', 'Room not found.');
+          return;
         }
 
-        multiplayer.myColor = 'b';
-    }
+        const room = roomSnap.val() || {};
+        const players = room.players || {};
+        let color = null;
 
-    multiplayer.roomId = roomId;
-    multiplayer.ref = ref;
-    multiplayer.active = true;
-
-    // Remove our player slot when disconnected
-    ref.child('players/' + multiplayer.myColor)
-        .onDisconnect()
-        .remove();
-
-    console.log(
-        'Joined room:',
-        roomId,
-        'Color:',
-        multiplayer.myColor
-    );
-
-    setupMultiplayerListeners();
-
-    await ref.child('status').transaction((status) => {
-        if (status === 'finished') return status;
-        return 'playing';
-    });
-
-    updateMultiplayerUI();
-}
-
-        if (!color) {
-          const roomSnap = await ref.once('value');
-          if (!roomSnap.exists()) {
-            showToast('Room not found.', 'error');
-            updateOnlineStatusUI('error', 'Room not found.');
+        if (players.w === pid) color = 'w';
+        else if (players.b === pid) color = 'b';
+        else {
+          const tx = await ref.child('players/b').transaction((currentBlack) => {
+            if (currentBlack === null || currentBlack === undefined) return pid;
+            return;
+          });
+          if (!tx.committed) {
+            showToast('Room is full.', 'error');
+            updateOnlineStatusUI('error', 'Room is full.');
             return;
           }
-          showToast('Room is full.', 'error');
-          updateOnlineStatusUI('error', 'Room is full.');
-          return;
+          color = 'b';
         }
 
         multiplayer.ref = ref;
         multiplayer.roomId = cleanId;
         multiplayer.myPlayerId = pid;
         multiplayer.myColor = color;
+        multiplayer.active = true;
+        multiplayer.lastMoveKey = null;
 
-        // Register cleanup if we drop.
-        ref.child('players/' + color).onDisconnect().remove();
-        ref.child('status').onDisconnect().set('abandoned');
+        await ref.child('players/' + color).onDisconnect().remove();
+        await ref.child('status').transaction((status) => {
+          if (status === 'finished') return status;
+          return 'playing';
+        });
 
         setupRoomListeners();
         updateOnlineRoomUI();
@@ -2579,15 +2552,20 @@
           color === 'b' ? 'connected' : 'waiting',
           color === 'b'
             ? 'Joined room as Black. Waiting for White to move.'
-            : 'Reclaimed host seat. Share the link to invite a friend.'
+            : 'Reclaimed White seat. Waiting for Black.'
         );
 
         window.history.replaceState({}, '', window.location.pathname + '?roomid=' + cleanId);
-
         multiplayerSyncLocalFromRoom();
         updateOpponentBarForMultiplayer();
+        console.log('Joined room:', cleanId, 'Color:', color);
       } catch (err) {
         console.error('joinRoom failed:', err);
+        multiplayer.active = false;
+        multiplayer.ref = null;
+        multiplayer.roomId = null;
+        multiplayer.myPlayerId = null;
+        multiplayer.myColor = null;
         showToast('Failed to join room: ' + (err.message || 'unknown error'), 'error');
         updateOnlineStatusUI('error', 'Could not join room.');
       }
@@ -2610,7 +2588,6 @@
       try {
         if (color && pid) {
           ref.child('players/' + color).onDisconnect().cancel();
-          ref.child('status').onDisconnect().cancel();
 
           // Only remove our slot if it still holds our id.
           const slotSnap = await ref.child('players/' + color).once('value');
